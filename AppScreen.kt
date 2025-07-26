@@ -1,9 +1,15 @@
 package com.kotlingdgocucb.elimuApp.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -21,6 +27,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -31,6 +38,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -97,74 +105,131 @@ fun AppScreen(
                 topBar = {
                     CenterAlignedTopAppBar(
                         title = {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.fillMaxWidth()
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(2.dp, RoundedCornerShape(24.dp)),
+                                shape = RoundedCornerShape(24.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                                )
                             ) {
-                                // Photo de profil : clic pour accéder à la page de modification du profil
-                                IconButton(
-                                    onClick = { navController.navigate("profile") }
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 12.dp, vertical = 8.dp)
                                 ) {
-                                    AsyncImage(
-                                        model = ImageRequest.Builder(LocalContext.current)
-                                            .data(userInfo?.profile_picture_uri)
-                                            .crossfade(true)
-                                            .build(),
-                                        placeholder = painterResource(R.drawable.account),
-                                        contentDescription = "Photo de profil",
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(40.dp)
-                                            .clip(CircleShape)
-                                            .graphicsLayer(
+                                    // Photo de profil avec animation
+                                    AnimatedVisibility(
+                                        visible = true,
+                                        enter = scaleIn(animationSpec = spring()) + fadeIn()
+                                    ) {
+                                        Card(
+                                            modifier = Modifier
+                                                .size(48.dp)
+                                                .shadow(4.dp, CircleShape),
+                                            shape = CircleShape,
+                                            onClick = { navController.navigate("profile") }
+                                        ) {
+                                            AsyncImage(
+                                                model = ImageRequest.Builder(LocalContext.current)
+                                                    .data(userInfo?.profile_picture_uri)
+                                                    .crossfade(true)
+                                                    .build(),
+                                                placeholder = painterResource(R.drawable.account),
+                                                contentDescription = "Photo de profil",
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .graphicsLayer(
+                                                        translationY = textOffset,
+                                                        alpha = alphaValue
+                                                    )
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    // Message de bienvenue amélioré
+                                    Column(
+                                        modifier = Modifier.weight(1f)
+                                    ) {
+                                        Text(
+                                            text = "Bonjour 👋",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                                            modifier = Modifier.graphicsLayer(
                                                 translationY = textOffset,
                                                 alpha = alphaValue
                                             )
-                                    )
-                                }
-                                Spacer(modifier = Modifier.width(8.dp))
-                                // Message de bienvenue
-                                TypewriterText(
-                                    text = "Bonjour ${userInfo?.name ?: "Invité"}",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                    modifier = Modifier.graphicsLayer(
-                                        translationY = textOffset,
-                                        alpha = alphaValue
-                                    )
-                                )
-                                Spacer(modifier = Modifier.weight(1f))
-                                // Bouton notification avec badge
-                                IconButton(
-                                    onClick = { navController.navigate("notifications") },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    BadgedBox(
-                                        badge = {
-                                            if (notificationsCount > 0) {
-                                                Badge(
-                                                    containerColor = Color.Red
+                                        )
+                                        TypewriterText(
+                                            text = userInfo?.name ?: "Invité",
+                                            style = MaterialTheme.typography.titleMedium.copy(
+                                                fontWeight = FontWeight.Bold,
+                                                fontSize = 18.sp
+                                            ),
+                                            modifier = Modifier.graphicsLayer(
+                                                translationY = textOffset,
+                                                alpha = alphaValue
+                                            )
+                                        )
+                                    }
+                                    // Bouton notification amélioré
+                                    AnimatedVisibility(
+                                        visible = true,
+                                        enter = scaleIn(animationSpec = spring()) + fadeIn()
+                                    ) {
+                                        Card(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .shadow(3.dp, CircleShape),
+                                            shape = CircleShape,
+                                            colors = CardDefaults.cardColors(
+                                                containerColor = if (notificationsCount > 0) 
+                                                    MaterialTheme.colorScheme.primaryContainer 
+                                                else MaterialTheme.colorScheme.surfaceVariant
+                                            ),
+                                            onClick = { navController.navigate("notifications") }
+                                        ) {
+                                            Box(
+                                                modifier = Modifier.fillMaxSize(),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                BadgedBox(
+                                                    badge = {
+                                                        if (notificationsCount > 0) {
+                                                            Badge(
+                                                                containerColor = MaterialTheme.colorScheme.error,
+                                                                modifier = Modifier.shadow(2.dp, CircleShape)
+                                                            ) {
+                                                                Text(
+                                                                    text = notificationsCount.toString(),
+                                                                    color = MaterialTheme.colorScheme.onError,
+                                                                    style = MaterialTheme.typography.labelSmall,
+                                                                    fontWeight = FontWeight.Bold
+                                                                )
+                                                            }
+                                                        }
+                                                    }
                                                 ) {
-                                                    Text(
-                                                        text = notificationsCount.toString(),
-                                                        color = Color.White,
-                                                        style = MaterialTheme.typography.labelSmall
-                                                    )
+                                                    Icon(
+                                                        imageVector = Icons.Default.Notifications,
+                                                        contentDescription = "Notifications",
+                                                        tint = if (notificationsCount > 0) 
+                                                            MaterialTheme.colorScheme.primary 
+                                                        else MaterialTheme.colorScheme.onSurfaceVariant,
+                                                        modifier = Modifier.size(20.dp)
+                                    )
                                                 }
                                             }
                                         }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Notifications,
-                                            contentDescription = "Notifications",
-                                            tint = MaterialTheme.colorScheme.onPrimaryContainer
-                                        )
                                     }
                                 }
                             }
                         },
                         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                            titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-
+                            containerColor = Color.Transparent
                         )
                     )
                 },
@@ -189,9 +254,19 @@ fun AppScreen(
                                     AppDestinations.entries.forEach {
                                         item(
                                             icon = {
-                                                Icon(it.icon, contentDescription = it.contentDescription, modifier = Modifier.size(20.dp))
+                                                Icon(
+                                                    it.icon, 
+                                                    contentDescription = it.contentDescription, 
+                                                    modifier = Modifier.size(22.dp)
+                                                )
                                             },
-                                            label = { Text(it.label, style = MaterialTheme.typography.labelSmall) },
+                                            label = { 
+                                                Text(
+                                                    it.label, 
+                                                    style = MaterialTheme.typography.labelMedium,
+                                                    fontWeight = if (it == currentDestination) FontWeight.Bold else FontWeight.Normal
+                                                ) 
+                                            },
                                             selected = it == currentDestination,
                                             onClick = {
                                                 currentDestination = it
@@ -244,109 +319,157 @@ fun ModernDrawerContent(
 ) {
     ModalDrawerSheet(
         modifier = Modifier.fillMaxWidth(0.8f),
-        drawerContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-        drawerContentColor = MaterialTheme.colorScheme.onSurfaceVariant
+        drawerContainerColor = MaterialTheme.colorScheme.surface,
+        drawerContentColor = MaterialTheme.colorScheme.onSurface
     ) {
         Spacer(modifier = Modifier.height(24.dp))
         // En-tête profil avec dégradé horizontal
-        Box(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary,
-                            MaterialTheme.colorScheme.secondary
+                .shadow(8.dp, RoundedCornerShape(20.dp)),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = Color.Transparent
+            )
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
+                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.8f)
+                            )
                         )
                     )
-                )
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                AsyncImage(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(userInfo?.profile_picture_uri)
-                        .crossfade(true)
-                        .build(),
-                    placeholder = painterResource(R.drawable.account),
-                    contentDescription = "Photo de profil",
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(100.dp)
-                        .clip(CircleShape)
-                        .graphicsLayer(
-                            translationY = textOffset,
-                            alpha = alphaValue
+                    .padding(20.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Card(
+                        modifier = Modifier
+                            .size(100.dp)
+                            .shadow(6.dp, CircleShape),
+                        shape = CircleShape
+                    ) {
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(userInfo?.profile_picture_uri)
+                                .crossfade(true)
+                                .build(),
+                            placeholder = painterResource(R.drawable.account),
+                            contentDescription = "Photo de profil",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .graphicsLayer(
+                                    translationY = textOffset,
+                                    alpha = alphaValue
+                                )
                         )
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = userInfo?.name ?: "Nom utilisateur",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    text = userInfo?.email ?: "email@example.com",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    text = "Track : ${userInfo?.track ?: "Non défini"}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-                Text(
-                    text = "Mentor : ${userInfo?.mentor_name ?: "Non défini"}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
+                    }
+                    Text(
+                        text = userInfo?.name ?: "Nom utilisateur",
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
+                        ),
+                        color = Color.White
+                    )
+                    Text(
+                        text = userInfo?.email ?: "email@example.com",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.White.copy(alpha = 0.9f)
+                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            color = Color.White.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = userInfo?.track ?: "Track",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                        Surface(
+                            color = Color.White.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text(
+                                text = userInfo?.mentor_name?.take(10) ?: "Mentor",
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = Color.White,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
             }
         }
         Spacer(modifier = Modifier.height(24.dp))
-        Divider()
+        Divider(
+            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+            thickness = 1.dp,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
         Spacer(modifier = Modifier.height(8.dp))
-        // Exemple d'item : Feedbacks
-        NavigationDrawerItem(
-            icon = { Icon(Icons.Default.Feedback, contentDescription = "Feedbacks") },
-            label = { Text("Feedbacks") },
-            selected = false,
-            onClick = {
-                navController.navigate("feedback")
-            },
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        
+        // Items du menu avec style amélioré
+        val menuItems = listOf(
+            Triple(Icons.Default.Feedback, "Feedbacks") { navController.navigate("feedback") },
+            Triple(Icons.Default.Description, "Terms & Conditions") { navController.navigate("terms") },
+            Triple(Icons.Default.Info, "À propos") { navController.navigate("about") },
+            Triple(Icons.Default.ExitToApp, "Se déconnecter") { onLogoutClicked() }
         )
-        // Exemple d'item : Terms & Conditions
-        NavigationDrawerItem(
-            icon = { Icon(Icons.Default.Description, contentDescription = "Terms & Conditions") },
-            label = { Text("Terms & Conditions") },
-            selected = false,
-            onClick = {
-                navController.navigate("terms")
-            },
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-        // Exemple d'item : À propos
-        NavigationDrawerItem(
-            icon = { Icon(Icons.Default.Info, contentDescription = "À propos") },
-            label = { Text("À propos") },
-            selected = false,
-            onClick = {
-                navController.navigate("about")
-            },
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
-        NavigationDrawerItem(
-            icon = { Icon(Icons.Default.ExitToApp, contentDescription = "Se déconnecter") },
-            label = { Text("Se déconnecter") },
-            selected = false,
-            onClick = {
-                onLogoutClicked()
-            },
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-        )
+        
+        menuItems.forEach { (icon, label, onClick) ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp, vertical = 2.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = Color.Transparent
+                ),
+                onClick = onClick
+            ) {
+                NavigationDrawerItem(
+                    icon = { 
+                        Icon(
+                            icon, 
+                            contentDescription = label,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        ) 
+                    },
+                    label = { 
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Medium
+                        ) 
+                    },
+                    selected = false,
+                    onClick = onClick,
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    colors = NavigationDrawerItemDefaults.colors(
+                        unselectedContainerColor = Color.Transparent,
+                        selectedContainerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    )
+                )
+            }
+        }
         Spacer(modifier = Modifier.height(16.dp))
     }
 }
